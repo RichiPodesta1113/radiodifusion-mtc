@@ -8,6 +8,8 @@ resource "neon_project" "radiodifusion" {
   pg_version = 17
   org_id     = var.neon_org_id
 
+  history_retention_seconds = 21600
+
   branch {
     name          = "main"
     database_name = "radiodifusion_db"
