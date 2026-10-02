@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS tmp_autorizaciones;
+
 CREATE TEMP TABLE tmp_autorizaciones (
     id              INTEGER,
     razon_social    VARCHAR(150),
@@ -44,3 +46,5 @@ SELECT
     TO_DATE(fecha_corte, 'YYYYMMDD')
 FROM tmp_autorizaciones
 ON CONFLICT (id, fecha_corte) DO NOTHING;
+
+DROP TABLE IF EXISTS tmp_autorizaciones;
