@@ -13,14 +13,7 @@ CREATE TEMP TABLE tmp_autorizaciones (
     fecha_corte     VARCHAR(8)
 );
 
-\copy tmp_autorizaciones
-FROM 'data/autorizaciones_radiodifusion.csv'
-WITH (
-    FORMAT CSV,
-    HEADER TRUE,
-    DELIMITER ',',
-    ENCODING 'LATIN1'
-);
+\copy tmp_autorizaciones FROM 'data/autorizaciones_radiodifusion.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',', ENCODING 'LATIN1');
 
 INSERT INTO autorizaciones_radiodifusion (
     id,
