@@ -15,7 +15,7 @@ jobs:
       - name: Verificar archivo PBIX
         run: |
           test -f "powerbi/radiodifusion_mtc.pbix"
-          echo "Reporte Power BI encontrado correctamente"
+          echo "PBIX encontrado correctamente"
 
       - name: Obtener token de Power BI
         id: token
@@ -31,20 +31,21 @@ jobs:
           TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
 
           if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
-            echo "No se pudo obtener el token de Power BI"
+            echo "ERROR: No se pudo obtener token de Power BI"
+            echo "$RESPONSE" | jq -r '.error_description // .error'
             exit 1
           fi
 
           echo "::add-mask::$TOKEN"
           echo "access_token=$TOKEN" >> "$GITHUB_OUTPUT"
 
-      - name: Publicar PBIX
+      - name: Publicar reporte PBIX
         run: |
           curl --fail-with-body -X POST \
             "https://api.powerbi.com/v1.0/myorg/groups/${{ secrets.POWERBI_WORKSPACE_ID }}/imports?datasetDisplayName=radiodifusion_mtc&nameConflict=CreateOrOverwrite" \
             -H "Authorization: Bearer ${{ steps.token.outputs.access_token }}" \
             -F "file=@powerbi/radiodifusion_mtc.pbix"
 
-      - name: Confirmar despliegue
+      - name: Despliegue completado
         run: |
-          echo "Proceso de publicación de Power BI completado"
+          echo "Reporte Power BI desplegado correctamente"
