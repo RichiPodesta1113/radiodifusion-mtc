@@ -1,0 +1,50 @@
+name: Desplegar reporte Power BI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-powerbi:
+    name: Publicar reporte Power BI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Verificar archivo PBIX
+        run: |
+          test -f "powerbi/radiodifusion_mtc.pbix"
+          echo "Reporte Power BI encontrado correctamente"
+
+      - name: Obtener token de Power BI
+        id: token
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            "https://login.microsoftonline.com/${{ secrets.POWERBI_TENANT_ID }}/oauth2/v2.0/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=${{ secrets.POWERBI_CLIENT_ID }}" \
+            -d "client_secret=${{ secrets.POWERBI_CLIENT_SECRET }}" \
+            -d "scope=https://analysis.windows.net/powerbi/api/.default" \
+            -d "grant_type=client_credentials")
+
+          TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+
+          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+            echo "No se pudo obtener el token de Power BI"
+            exit 1
+          fi
+
+          echo "::add-mask::$TOKEN"
+          echo "access_token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar PBIX
+        run: |
+          curl --fail-with-body -X POST \
+            "https://api.powerbi.com/v1.0/myorg/groups/${{ secrets.POWERBI_WORKSPACE_ID }}/imports?datasetDisplayName=radiodifusion_mtc&nameConflict=CreateOrOverwrite" \
+            -H "Authorization: Bearer ${{ steps.token.outputs.access_token }}" \
+            -F "file=@powerbi/radiodifusion_mtc.pbix"
+
+      - name: Confirmar despliegue
+        run: |
+          echo "Proceso de publicación de Power BI completado"
